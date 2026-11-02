@@ -1,0 +1,284 @@
+/* ---------- header ---------- */
+.contact-hero {
+  background: #e6e6ff;
+  text-align: center;
+  padding: clamp(150px, 16vw, 210px) 20px 60px;
+}
+
+.contact-hero h1 {
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #222;
+  margin-bottom: 20px;
+}
+
+.contact-hero p {
+  max-width: 460px;
+  margin: 0 auto;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #444;
+}
+
+/* ---------- card ---------- */
+/* lavender at the top, white below, so the card sits across the color change */
+.contact-wrap {
+  background: linear-gradient(to bottom,
+      #e6e6ff 0,
+      #e6e6ff 140px,
+      #222 140px,
+      #222 141px,
+      #fff 141px);
+  padding: 0 20px 80px;
+}
+
+.contact-card {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 48px;
+  background: #fff;
+  border: 1px solid #222;
+  border-radius: 28px;
+}
+
+.contact-card h2 {
+  font-size: 2rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.contact-sub {
+  color: #333;
+  margin-bottom: 32px;
+}
+
+/* address / phone / email */
+.contact-info {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 40px;
+  display: grid;
+  gap: 22px;
+}
+
+.contact-info li {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.contact-info svg {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.contact-info strong {
+  display: block;
+  font-weight: 500;
+}
+
+.contact-info span {
+  color: #555;
+  font-size: 0.95rem;
+}
+
+/* ---------- form ---------- */
+.contact-form {
+  display: grid;
+  gap: 26px;
+}
+
+.contact-form label {
+  display: block;
+  font-size: 0.8rem;
+  color: #777;
+}
+
+.contact-form input,
+.contact-form textarea {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 1px solid #222;
+  border-radius: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 1rem;
+  color: #222;
+  outline: none;
+  resize: vertical;
+}
+
+.contact-form input::placeholder,
+.contact-form textarea::placeholder {
+  color: #333;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  border-bottom-width: 2px;
+}
+
+.send-btn {
+  justify-self: start;
+  padding: 10px 24px;
+  background: #fff;
+  color: #111;
+  border: 1px solid #555;
+  border-radius: 8px;
+  box-shadow: 0 2px 0 #555;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.send-btn:hover {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 #555;
+}
+
+.sent-note {
+  margin: 0;
+  color: #1a7f4b;
+  font-size: 0.95rem;
+}
+
+/* ---------- FAQ ---------- */
+.faq {
+  text-align: center;
+  padding: 40px 20px 100px;
+}
+
+.faq h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.faq-sub {
+  color: #444;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin-bottom: 40px;
+}
+
+.faq-list {
+  max-width: 640px;
+  margin: 0 auto;
+  display: grid;
+  gap: 14px;
+  text-align: left;
+}
+
+.faq-item {
+  border: 1px solid #222;
+  border-radius: 16px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.faq-q {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 18px 24px;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-size: 1rem;
+  color: #222;
+  text-align: left;
+  cursor: pointer;
+}
+
+.faq-plus {
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.faq-item.open .faq-plus {
+  transform: rotate(45deg);
+  /* the plus turns into an x */
+}
+
+/* smooth open and close without knowing the height */
+.faq-a {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s ease;
+}
+
+.faq-a p {
+  overflow: hidden;
+  margin: 0;
+  padding: 0 24px;
+  color: #444;
+  line-height: 1.6;
+  transition: padding 0.35s ease;
+}
+
+.faq-item.open .faq-a {
+  grid-template-rows: 1fr;
+}
+
+.faq-item.open .faq-a p {
+  padding-bottom: 20px;
+}
+
+/* ---------- scroll reveal ---------- */
+.faq-reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.7s ease,
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* heading, then subtitle, then each question one after another */
+.faq h2.faq-reveal {
+  transition-delay: 0s;
+}
+
+.faq-sub.faq-reveal {
+  transition-delay: 0.12s;
+}
+
+.faq-item.faq-reveal {
+  transition-delay: calc(0.25s + var(--i, 0) * 0.1s);
+}
+
+.faq.in-view .faq-reveal {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faq-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ---------- small screens ---------- */
+@media (max-width: 768px) {
+  .contact-card {
+    padding: 28px 22px;
+  }
+
+  .contact-wrap {
+    background: linear-gradient(#e6e6ff 0, #e6e6ff 80px, #222 80px, #222 81px, #fff 81px);
+  }
+}
+
+.form-error {
+  color: #c0392b;
+}
+
+.contact-form button[type="submit"]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

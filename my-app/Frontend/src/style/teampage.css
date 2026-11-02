@@ -1,0 +1,300 @@
+.tp {
+  background: #fdfcf8;
+  padding: clamp(140px, 15vw, 190px) 24px 100px;
+  font-family: "Instrument Sans", sans-serif;
+}
+
+.tp-head {
+  text-align: center;
+  margin-bottom: 70px;
+}
+
+.tp-head h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 500;
+  color: #222;
+  margin-bottom: 10px;
+}
+
+.tp-head p {
+  color: #444;
+  margin: 0;
+}
+
+/* ---------- one member row ---------- */
+.tp-row {
+  display: grid;
+  grid-template-columns: minmax(260px, 380px) 1fr;
+  gap: 60px;
+  align-items: center;
+  max-width: 1000px;
+  margin: 0 auto 110px;
+}
+
+.tp-row:last-child {
+  margin-bottom: 0;
+}
+
+.tp-photo-wrap {
+  position: relative;
+}
+
+/* the dark outline follows the bumpy edge (a border can't, because of the clip) */
+.tp-outline {
+  filter: drop-shadow(1px 0 0 #222) drop-shadow(-1px 0 0 #222) drop-shadow(0 1px 0 #222) drop-shadow(0 -1px 0 #222);
+}
+
+.tp-photo {
+  aspect-ratio: 3 / 4;
+  clip-path: url(#scallop);
+  overflow: hidden;
+}
+
+.tp-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+
+/* ---------- tape on top of the photo ---------- */
+.tp-tape {
+  position: absolute;
+  top: -14px;
+  left: 14%;
+  z-index: 2;
+  width: 46%;
+  height: 34px;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22'%3E%3Cpath d='M4 16 L9 6 L14 16 Z' fill='%23222'/%3E%3C/svg%3E");
+  border: 1px solid #222;
+  border-radius: 4px;
+  transform: rotate(-4deg);
+}
+
+/* ---------- text ---------- */
+.tp-role {
+  margin: 0 0 6px;
+  font-size: 0.9rem;
+  color: #777;
+}
+
+.tp-text h2 {
+  font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+  font-weight: 500;
+  color: #222;
+  margin-bottom: 8px;
+}
+
+/* ---------- skill bars ---------- */
+.tp-skills {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 28px;
+  margin: 26px 0 30px;
+}
+
+.tp-skill-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: #222;
+}
+
+.tp-bar {
+  height: 10px;
+  margin-top: 6px;
+  background: #fff;
+  border: 1px solid #222;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.tp-bar span {
+  display: block;
+  height: 100%;
+  width: 0;
+  /* starts empty */
+  background: var(--c);
+  border-right: 1px solid #222;
+  border-radius: 999px;
+  transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.5s;
+}
+
+.tp-row.in-view .tp-bar span {
+  width: var(--w);
+  /* fills when the row appears */
+}
+
+/* ---------- rotating badge ---------- */
+.tp-avail {
+  position: absolute;
+  left: -6px;
+  bottom: -6px;
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: #d7efff;
+  border: 1px solid #222;
+  color: #222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tp-avail-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  animation: tp-spin 14s linear infinite;
+}
+
+.tp-avail-ring text {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  fill: #222;
+}
+
+.tp-avail-icon {
+  position: relative;
+  font-size: 1.4rem;
+}
+
+@keyframes tp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- portfolio button ---------- */
+.tp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 8px 22px;
+  background: #fff;
+  color: #222;
+  font-weight: 500;
+  text-decoration: none;
+  border: 1px solid #222;
+  border-radius: 999px;
+  box-shadow: 0 4px 0 #222;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tp-btn:hover {
+  color: #222;
+  transform: translateY(4px);
+  box-shadow: 0 0 0 #222;
+}
+
+.tp-btn-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 32px;
+  background: #ffe3a3;
+  border: 1px solid #222;
+  border-radius: 16px;
+  transition: transform 0.25s ease;
+}
+
+.tp-btn:hover .tp-btn-arrow {
+  transform: translateX(4px);
+}
+
+/* ---------- scroll reveal ---------- */
+.tp-photo-wrap,
+.tp-text {
+  opacity: 0;
+  transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tp-photo-wrap {
+  transform: translateX(-60px) rotate(-3deg);
+}
+
+.tp-text {
+  transform: translateX(60px);
+  transition-delay: 0.15s;
+}
+
+.tp-row.in-view .tp-photo-wrap,
+.tp-row.in-view .tp-text {
+  opacity: 1;
+  transform: none;
+}
+
+/* header fades in on load */
+.tp-head {
+  animation: tp-rise 0.8s ease both;
+}
+
+@keyframes tp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .tp-photo-wrap,
+  .tp-text {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .tp-bar span {
+    width: var(--w);
+    transition: none;
+  }
+
+  .tp-head {
+    animation: none;
+  }
+}
+
+
+
+/* ---------- phones and tablets ---------- */
+@media (max-width: 800px) {
+  .tp-row {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    margin-bottom: 80px;
+  }
+
+  .tp-photo-wrap {
+    max-width: 340px;
+    width: 100%;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .tp-skills {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+@media (min-width: 801px) {
+  .tp-row:nth-of-type(even) .tp-photo-wrap {
+    transform: translateX(60px) rotate(3deg);
+  }
+
+  .tp-row:nth-of-type(even) .tp-text {
+    transform: translateX(-60px);
+  }
+
+  .tp-row.in-view:nth-of-type(even) .tp-photo-wrap,
+  .tp-row.in-view:nth-of-type(even) .tp-text {
+    transform: none;
+  }
+}

@@ -1,0 +1,257 @@
+.member-page {
+  background: #fdfcf8;
+}
+
+/* ---------- about ---------- */
+.member-hero {
+  display: grid;
+  grid-template-columns: minmax(260px, 380px) 1fr;
+  gap: 60px;
+  align-items: start;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: clamp(140px, 15vw, 190px) 24px 70px;
+}
+
+.member-photo-wrap {
+  position: relative;
+}
+
+/* the dark outline follows the bumpy edge (a border can't, because of the clip) */
+.photo-outline {
+  filter: drop-shadow(1px 0 0 #222) drop-shadow(-1px 0 0 #222)
+          drop-shadow(0 1px 0 #222) drop-shadow(0 -1px 0 #222);
+}
+
+.member-photo {
+  aspect-ratio: 3 / 4;
+  clip-path: url(#scallop);
+  overflow: hidden;
+}
+
+.member-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+
+.member-role {
+  margin: 0 0 6px;
+  font-size: 0.9rem;
+  color: #777;
+}
+
+.member-text h1 {
+  font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+  font-weight: 500;
+  margin-bottom: 16px;
+  color: #222;
+}
+
+.member-text > p {
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: #444;
+  margin-bottom: 14px;
+}
+
+/* ---------- skill bars ---------- */
+.skills {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 28px;
+  margin-top: 26px;
+}
+
+.skill-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: #222;
+}
+
+.bar {
+  height: 10px;
+  margin-top: 6px;
+  background: #fff;
+  border: 1px solid #222;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+  width: var(--w);
+  background: var(--c);
+  border-right: 1px solid #222;
+  border-radius: 999px;
+  animation: fill 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fill {
+  from { width: 0; }
+}
+
+/* ---------- rotating badge ---------- */
+.avail {
+  position: absolute;
+  left: -6px;
+  bottom: -6px;
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: #d7efff;
+  border: 1px solid #222;
+  color: #222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avail-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  animation: availSpin 14s linear infinite;
+}
+
+.avail-ring text {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  fill: #222;
+}
+
+.avail-icon {
+  position: relative;
+  font-size: 1.4rem;
+}
+
+@keyframes availSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---------- capabilities ---------- */
+.caps-section {
+  text-align: center;
+  padding: 30px 24px 70px;
+}
+
+.caps-section h2 {
+  font-size: clamp(1.9rem, 4vw, 2.6rem);
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.caps-section > p {
+  max-width: 520px;
+  margin: 0 auto 32px;
+  color: #444;
+  line-height: 1.6;
+}
+
+.caps-section strong {
+  color: #111;
+  font-weight: 600;
+}
+
+.caps {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.cap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #fff;
+  border: 1px solid #555;
+  border-radius: 999px;
+  color: #222;
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.cap svg {
+  color: var(--tc);
+}
+
+.cap:hover {
+  transform: translateY(-4px) rotate(-4deg);
+  background: #fff8e1;
+}
+
+/* ---------- other members ---------- */
+.more-team {
+  text-align: center;
+  padding: 0 24px 100px;
+}
+
+.more-team h3 {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.more-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.more-list a {
+  padding: 8px 18px;
+  background: #fff;
+  border: 1px solid #555;
+  border-radius: 10px;
+  box-shadow: 0 2px 0 #555;
+  color: #111;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.more-list a span {
+  margin-left: 6px;
+  color: #777;
+  font-size: 0.85rem;
+}
+
+.more-list a:hover {
+  color: #111;
+  transform: translateY(2px);
+  box-shadow: 0 0 0 #555;
+}
+
+.member-missing {
+  text-align: center;
+  padding: 220px 20px 120px;
+}
+
+/* ---------- small screens ---------- */
+@media (max-width: 800px) {
+  .member-hero {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .member-photo-wrap {
+    max-width: 320px;
+    margin: 0 auto;
+  }
+  .skills {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avail-ring { animation: none; }
+  .bar span { animation: none; }
+}
