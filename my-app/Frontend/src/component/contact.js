@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { LuMapPin, LuPhone, LuMail, LuPlus } from "react-icons/lu";
 import "../style/contact.css";
 
-const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API = "https://kiddiex-freelancing.onrender.com";
 
 const faqs = [
   {
