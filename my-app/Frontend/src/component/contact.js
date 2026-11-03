@@ -39,36 +39,58 @@ function Contact() {
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (status === "sending") return;
+  
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    setStatus("sending");
-    setErrorMsg("");
+  if (status === "sending") return;
 
-    try {
-      const res = await fetch(`${API}/api/contact`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+  setStatus("sending");
+  setErrorMsg("");
 
-      const json = await res.json();
-      if (!res.ok || !json.ok) {
-        throw new Error(json.error || "Something went wrong.");
-      }
+  try {
+    const res = await fetch(`${API}/api/contact`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(form),
+    });
 
-      setStatus("sent");
-      setForm(emptyForm);
-    } catch (err) {
-      setStatus("error");
-      setErrorMsg(
-        err.message === "Failed to fetch"
-          ? "Could not reach the server. Please try again."
-          : err.message
+    const contentType = res.headers.get("content-type") || "";
+
+    const data = contentType.includes("application/json")
+      ? await res.json()
+      : null;
+
+    if (!res.ok || !data?.ok) {
+      throw new Error(
+        data?.error || `Request failed (${res.status})`
       );
     }
-  };
+
+    setStatus("sent");
+    setForm(emptyForm);
+
+    console.log("Contact API response:", data);
+
+    if (!data.welcomeEmailSent) {
+      console.warn("Welcome email was not sent.");
+    }
+
+  } catch (error) {
+    console.error("Contact submission error:", error);
+
+    setStatus("error");
+
+    setErrorMsg(
+      error.message === "Failed to fetch"
+        ? "Unable to connect. Please check your internet connection and try again."
+        : error.message
+    );
+  }
+};
+
 
   /* FAQ scroll reveal */
   useEffect(() => {

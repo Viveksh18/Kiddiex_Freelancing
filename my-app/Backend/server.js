@@ -14,11 +14,26 @@ const SITE = process.env.SITE_URL || "http://localhost:3000";
 app.set("trust proxy", 1);
 app.use(express.json({ limit: "10kb" }));
 
-const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:3000")
-  .split(",")
-  .map((url) => url.trim());
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "https://your-vercel-domain.vercel.app",
+];
 
-app.use(cors({ origin: allowedOrigins }));
+// Add any additional frontend domains from Render environment variables
+if (process.env.CLIENT_URL) {
+  allowedOrigins.push(
+    ...process.env.CLIENT_URL.split(",").map((url) => url.trim())
+  );
+}
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
