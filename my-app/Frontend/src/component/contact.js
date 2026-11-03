@@ -4,6 +4,8 @@ import "../style/contact.css";
 
 const API = "https://kiddiex-freelancing.onrender.com";
 
+// const API = "http://localhost:5000";
+
 const faqs = [
   {
     q: "Do you offer custom design solutions?",
