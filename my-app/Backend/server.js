@@ -8,36 +8,52 @@ const rateLimit = require("express-rate-limit");
 const app = express();
 
 const PORT = process.env.PORT || 5000;
-const BRAND = process.env.BRAND_NAME || "KIDDIEX";
+const BRAND = process.env.BRAND_NAME || "Kiddiex";
 const SITE = process.env.SITE_URL || "http://localhost:3000";
 
+// Render / Vercel sit behind a proxy
 app.set("trust proxy", 1);
-app.use(express.json({ limit: "10kb" }));
+
+/* ---------- CORS (must be FIRST, before json parser, limiter and routes) ---------- */
+
+const normalize = (url) => String(url).trim().replace(/\/+$/, "");
 
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
-  "https://your-vercel-domain.vercel.app",
+  "https://kiddiex-freelancing.vercel.app",
 ];
 
-// Add any additional frontend domains from Render environment variables
+// Extra origins from env, comma separated: CLIENT_URL=https://a.com,https://b.com
 if (process.env.CLIENT_URL) {
-  allowedOrigins.push(
-    ...process.env.CLIENT_URL.split(",").map((url) => url.trim())
-  );
+  allowedOrigins.push(...process.env.CLIENT_URL.split(",").map(normalize));
 }
 
-app.use(
-  cors({
-    origin: allowedOrigins,
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+const allowed = new Set(allowedOrigins.map(normalize));
+
+const corsOptions = {
+  origin(origin, callback) {
+    // No Origin header = curl, Postman, server-to-server: allow
+    if (!origin) return callback(null, true);
+    if (allowed.has(normalize(origin))) return callback(null, true);
+    console.warn("Blocked by CORS:", origin);
+    return callback(null, false); // no CORS headers -> browser blocks it
+  },
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 204,
+};
+
+// app.use(cors()) also answers every OPTIONS preflight automatically
+app.use(cors(corsOptions));
+
+app.use(express.json({ limit: "10kb" }));
+
+/* ---------- rate limit ---------- */
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5, // works on all express-rate-limit versions
+  max: 5,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -46,19 +62,25 @@ const limiter = rateLimit({
   },
 });
 
-// Gmail transporter
+/* ---------- Gmail transporter ---------- */
+
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    pass: process.env.EMAIL_PASS, // Gmail App Password
   },
+  connectionTimeout: 15000,
+  greetingTimeout: 15000,
+  socketTimeout: 20000,
 });
 
-// Verify Gmail connection
+// Verify Gmail connection (does not block server start)
 transporter.verify((error) => {
   if (error) {
-    console.error("Gmail connection failed:", error);
+    console.error("Gmail connection failed:", error.message);
   } else {
     console.log("Gmail SMTP connection successful!");
   }
@@ -84,7 +106,6 @@ function welcomeHtml(name) {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
       style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e5e5e5;">
 
-      <!-- Company -->
       <tr>
         <td style="padding:24px 30px;border-bottom:1px solid #eeeeee;">
           <div style="font-size:22px;font-weight:bold;color:#222222;letter-spacing:1px;">
@@ -93,7 +114,6 @@ function welcomeHtml(name) {
         </td>
       </tr>
 
-      <!-- Email Content -->
       <tr>
         <td style="padding:30px;">
           <p style="margin:0 0 20px;font-size:15px;color:#222222;">
@@ -117,7 +137,6 @@ function welcomeHtml(name) {
         </td>
       </tr>
 
-      <!-- Footer -->
       <tr>
         <td style="padding:16px 30px;background:#fafafa;border-top:1px solid #eeeeee;">
           <p style="margin:0;font-size:11px;line-height:1.6;color:#888888;">
@@ -199,12 +218,14 @@ app.post("/api/contact", limiter, async (req, res) => {
   }
 
   try {
+    const ownerEmail = process.env.OWNER_EMAIL || process.env.EMAIL_USER;
+
     // Send both emails independently
-    const results = await Promise.allSettled([
+    const [ownerResult, clientResult] = await Promise.allSettled([
       // 1. Notification to the owner
       transporter.sendMail({
         from: `"${BRAND} Website" <${process.env.EMAIL_USER}>`,
-        to: process.env.OWNER_EMAIL,
+        to: ownerEmail,
         replyTo: cleanEmail,
         subject: `New contact message from ${cleanName}`,
         text: `Name: ${cleanName}
@@ -223,7 +244,7 @@ ${cleanMessage}`,
       transporter.sendMail({
         from: `"${BRAND}" <${process.env.EMAIL_USER}>`,
         to: cleanEmail,
-        replyTo: process.env.OWNER_EMAIL,
+        replyTo: ownerEmail,
         subject: `Thanks for contacting ${BRAND}!`,
         text: `Hi ${cleanName},
 
@@ -238,8 +259,6 @@ Visit our website: ${SITE}`,
         html: welcomeHtml(cleanName),
       }),
     ]);
-
-    const [ownerResult, clientResult] = results;
 
     if (ownerResult.status === "fulfilled") {
       console.log("Owner email sent:", ownerResult.value.messageId);
@@ -279,7 +298,19 @@ Visit our website: ${SITE}`,
   }
 });
 
+/* ---------- 404 + error handler (JSON, keeps CORS headers) ---------- */
+
+app.use((req, res) => {
+  res.status(404).json({ ok: false, error: "Not found." });
+});
+
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+  res.status(err.status || 500).json({ ok: false, error: "Server error." });
+});
+
 /* ---------- start server ---------- */
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log("Allowed origins:", [...allowed].join(", "));
 });
