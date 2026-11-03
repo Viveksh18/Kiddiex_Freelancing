@@ -2,14 +2,13 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-const nodemailer = require("nodemailer");
 const rateLimit = require("express-rate-limit");
 
 const app = express();
 
 const PORT = process.env.PORT || 5000;
 const BRAND = process.env.BRAND_NAME || "Kiddiex";
-const SITE = process.env.SITE_URL || "http://localhost:3000";
+const SITE = process.env.SITE_URL || "http://localhost:3001";
 
 // Render / Vercel sit behind a proxy
 app.set("trust proxy", 1);
@@ -62,29 +61,35 @@ const limiter = rateLimit({
   },
 });
 
-/* ---------- Gmail transporter ---------- */
+/* ---------- email sender (Brevo HTTPS API - works on Render free tier) ---------- */
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, // Gmail App Password
-  },
-  connectionTimeout: 15000,
-  greetingTimeout: 15000,
-  socketTimeout: 20000,
-});
+async function sendMail({ to, subject, text, html, replyTo, fromName }) {
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "api-key": process.env.BREVO_API_KEY,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      sender: { name: fromName, email: process.env.EMAIL_USER },
+      to: [{ email: to }],
+      replyTo: { email: replyTo },
+      subject,
+      textContent: text,
+      htmlContent: html,
+    }),
+  });
 
-// Verify Gmail connection (does not block server start)
-transporter.verify((error) => {
-  if (error) {
-    console.error("Gmail connection failed:", error.message);
-  } else {
-    console.log("Gmail SMTP connection successful!");
+  if (!res.ok) {
+    throw new Error(`Brevo ${res.status}: ${await res.text()}`);
   }
-});
+  return res.json(); // { messageId }
+}
+
+if (!process.env.BREVO_API_KEY) {
+  console.warn("BREVO_API_KEY is not set - emails will fail.");
+}
 
 /* ---------- helpers ---------- */
 
@@ -223,8 +228,8 @@ app.post("/api/contact", limiter, async (req, res) => {
     // Send both emails independently
     const [ownerResult, clientResult] = await Promise.allSettled([
       // 1. Notification to the owner
-      transporter.sendMail({
-        from: `"${BRAND} Website" <${process.env.EMAIL_USER}>`,
+      sendMail({
+        fromName: `${BRAND} Website`,
         to: ownerEmail,
         replyTo: cleanEmail,
         subject: `New contact message from ${cleanName}`,
@@ -241,8 +246,8 @@ ${cleanMessage}`,
       }),
 
       // 2. Welcome email to the visitor
-      transporter.sendMail({
-        from: `"${BRAND}" <${process.env.EMAIL_USER}>`,
+      sendMail({
+        fromName: BRAND,
         to: cleanEmail,
         replyTo: ownerEmail,
         subject: `Thanks for contacting ${BRAND}!`,
