@@ -22,9 +22,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# member and project detail
-member.js
-projectdetail.js
-
-# media files
+# old static data and local media
+src/member.js
+src/projectdetail.js
 src/media/
