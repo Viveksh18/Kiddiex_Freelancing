@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { FaArrowRight } from "react-icons/fa6";
-import "../style/project.css";
 import { Link } from "react-router-dom";
-import { projects } from "../projectdetail.js";
-
-// Put your screenshots in public/projects/ (see the tip below)
+import { useProjects } from "../hooks/useProjects";
+import "../style/project.css";
 
 function Projects() {
-    const [active, setActive] = useState(null);   // the open book on touch screens
+    const { projects, loading } = useProjects();
+    const [active, setActive] = useState(null); // the open book on touch screens
 
     // phones and tablets can't hover, so a tap opens and closes the book
     const handleTap = (i) => {
@@ -30,10 +29,18 @@ function Projects() {
 
             {/* ---------- grid ---------- */}
             <section className="projects-wrap">
+                {loading && <p style={{ textAlign: "center" }}>Loading projects...</p>}
+
+                {!loading && projects.length === 0 && (
+                    <p style={{ textAlign: "center" }}>
+                        No projects to show yet. Please check back soon.
+                    </p>
+                )}
+
                 <div className="projects-grid">
                     {projects.map((p, i) => (
                         <div
-                            key={p.title}
+                            key={p.id}
                             className={`book-slot ${active === i ? "open" : ""}`}
                             style={{ "--c": p.color }}
                             tabIndex={0}
@@ -58,11 +65,15 @@ function Projects() {
                                     <div className="cover-front">
                                         <span className="cover-tag">{p.tag}</span>
                                         <div className="cover-art">
-                                            <img
-                                                src={p.image}
-                                                alt=""
-                                                onError={(e) => (e.currentTarget.style.display = "none")}
-                                            />
+                                            {p.image && (
+                                                <img
+                                                    src={p.image}
+                                                    alt=""
+                                                    onError={(e) =>
+                                                        (e.currentTarget.style.display = "none")
+                                                    }
+                                                />
+                                            )}
                                         </div>
                                         <h3>{p.title}</h3>
                                     </div>
@@ -76,7 +87,7 @@ function Projects() {
                                             <dd>{p.year}</dd>
                                             <dt>Tools</dt>
                                             <dd className="chips">
-                                                {p.tools.map((t) => (
+                                                {(p.tools || []).map((t) => (
                                                     <span key={t}>{t}</span>
                                                 ))}
                                             </dd>

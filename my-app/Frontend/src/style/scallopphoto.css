@@ -1,0 +1,66 @@
+.sp-wrap {
+  position: relative;
+  width: 100%;
+}
+
+/* dark outline that follows the bumpy edge */
+.sp-outline {
+  filter: drop-shadow(1px 0 0 #222) drop-shadow(-1px 0 0 #222)
+          drop-shadow(0 1px 0 #222) drop-shadow(0 -1px 0 #222);
+}
+
+.sp-photo {
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+}
+
+.sp-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+
+.sp-badge {
+  position: absolute;
+  left: -6px;
+  bottom: -6px;
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: #d7efff;
+  border: 1px solid #222;
+  color: #222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sp-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  animation: spSpin 14s linear infinite;
+}
+
+.sp-ring text {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  fill: #222;
+}
+
+.sp-mail {
+  position: relative;
+  font-size: 1.4rem;
+}
+
+@keyframes spSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-ring { animation: none; }
+}

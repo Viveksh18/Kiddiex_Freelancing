@@ -6,22 +6,81 @@ import {
 import {
     LuSparkles, LuZap, LuLayers, LuSearch, LuShieldCheck, LuTarget, LuCheck, LuLoader, LuClock, LuPlay,
 } from "react-icons/lu";
-import { projects } from "../projectdetail.js";
+import { useProjects } from "../hooks/useProjects";
 import "../style/projectpage.css";
 
 const featureIcons = [LuSparkles, LuZap, LuLayers, LuSearch, LuShieldCheck, LuTarget];
 
+function getProgress(timeline = []) {
+    const total = timeline.length;
+    if (!total) return { percent: 0, key: "planned", label: "Planned" };
+
+    const done = timeline.filter((t) => t.state === "done").length;
+    const current = timeline.some((t) => t.state === "current");
+    const percent = Math.round(((done + (current ? 0.5 : 0)) / total) * 100);
+
+    if (done === total) return { percent: 100, key: "done", label: "Completed" };
+    if (done === 0 && !current) return { percent: 0, key: "planned", label: "Planned" };
+    return { percent, key: "progress", label: "In progress" };
+}
+
+/* shows a poster first, and only loads the video after a click */
+function VideoCard({ video, index }) {
+    const [playing, setPlaying] = useState(false);
+    const isYouTube = video.type === "youtube";
+
+    const poster =
+        video.poster ||
+        (isYouTube ? `https://img.youtube.com/vi/${video.src}/hqdefault.jpg` : "");
+
+    return (
+        <figure
+            className="pj-video"
+            data-pj="zoom"
+            style={{ "--i": index, ...(video.ratio ? { "--ratio": video.ratio } : {}) }}
+        >
+            <div className="pj-video-frame">
+                {playing ? (
+                    isYouTube ? (
+                        <iframe
+                            src={`https://www.youtube.com/embed/${video.src}?autoplay=1&rel=0`}
+                            title={video.title}
+                            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                            allowFullScreen
+                        />
+                    ) : (
+                        <video src={video.src} poster={poster || undefined} controls autoPlay playsInline />
+                    )
+                ) : (
+                    <button
+                        type="button"
+                        className="pj-video-poster"
+                        onClick={() => setPlaying(true)}
+                        aria-label={`Play ${video.title}`}
+                    >
+                        {poster && <img src={poster} alt="" />}
+                        <span className="pj-play"><LuPlay /></span>
+                    </button>
+                )}
+            </div>
+            <figcaption>{video.title}</figcaption>
+        </figure>
+    );
+}
+
 function ProjectDetail({ id }) {
     const pageRef = useRef(null);
-    const barRef = useRef(null);
+    const { projects, loading } = useProjects();
 
     const index = projects.findIndex((p) => p.id === id);
-    const project = projects[index];
+    const project = index >= 0 ? projects[index] : null;
 
-    /* scroll reveal: anything with data-pj gets "in-view" when it appears */
+    /* scroll reveal: anything with data-pj gets "in-view" when it appears.
+       Runs again once the project has loaded, because that is when the
+       elements actually exist on the page. */
     useEffect(() => {
         const page = pageRef.current;
-        if (!page) return;
+        if (!page || !project) return;
 
         const els = page.querySelectorAll("[data-pj]");
         if (!els.length) return;
@@ -45,107 +104,38 @@ function ProjectDetail({ id }) {
 
         els.forEach((el) => io.observe(el));
         return () => io.disconnect();
-    }, []);
+    }, [project]);
 
-    /* reading-progress bar at the top of the screen */
-    useEffect(() => {
-        const bar = barRef.current;
-        if (!bar) return;
-
-        let ticking = false;
-        const update = () => {
-            ticking = false;
-            const max = document.documentElement.scrollHeight - window.innerHeight;
-            const p = max > 0 ? Math.min(1, window.scrollY / max) : 0;
-            bar.style.transform = `scaleX(${p})`;
-        };
-        const onScroll = () => {
-            if (!ticking) {
-                ticking = true;
-                requestAnimationFrame(update);
-            }
-        };
-
-        update();
-        window.addEventListener("scroll", onScroll, { passive: true });
-        window.addEventListener("resize", onScroll);
-        return () => {
-            window.removeEventListener("scroll", onScroll);
-            window.removeEventListener("resize", onScroll);
-        };
-    }, []);
+    if (loading) {
+        return (
+            <main className="pj-missing">
+                <h1>Loading...</h1>
+            </main>
+        );
+    }
 
     if (!project) {
         return (
             <main className="pj-missing">
                 <h1>Project not found</h1>
-                <Link to="/" className="pj-btn">Back to home</Link>
+                <Link to="/project" className="pj-btn">All projects</Link>
             </main>
         );
     }
 
-    const status = getProgress(project.timeline);
+    const overview = project.overview || [];
+    const tools = project.tools || [];
+    const features = project.features || [];
+    const gallery = project.gallery || [];
+    const videos = project.videos || [];
+    const timeline = project.timeline || [];
 
+    const status = getProgress(timeline);
     const next = projects[(index + 1) % projects.length];
-    const words = project.title.split(" ");
-
-    function getProgress(timeline = []) {
-        const total = timeline.length;
-        if (!total) return { percent: 0, key: "planned", label: "Planned" };
-
-        const done = timeline.filter((t) => t.state === "done").length;
-        const current = timeline.some((t) => t.state === "current");
-        const percent = Math.round(((done + (current ? 0.5 : 0)) / total) * 100);
-
-        if (done === total) return { percent: 100, key: "done", label: "Completed" };
-        if (done === 0 && !current) return { percent: 0, key: "planned", label: "Planned" };
-        return { percent, key: "progress", label: "In progress" };
-    }
-
-    /* shows a poster first, and only loads the video after a click */
-    function VideoCard({ video, index }) {
-        const [playing, setPlaying] = useState(false);
-        const isYouTube = video.type === "youtube";
-
-        const poster =
-            video.poster ||
-            (isYouTube ? `https://img.youtube.com/vi/${video.src}/hqdefault.jpg` : "");
-
-        return (
-            <figure className="pj-video" data-pj="zoom" style={{ "--i": index }}>
-                <div className="pj-video-frame">
-                    {playing ? (
-                        isYouTube ? (
-                            <iframe
-                                src={`https://www.youtube.com/embed/${video.src}?autoplay=1&rel=0`}
-                                title={video.title}
-                                allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                                allowFullScreen
-                            />
-                        ) : (
-                            <video src={video.src} poster={poster || undefined} controls autoPlay playsInline />
-                        )
-                    ) : (
-                        <button
-                            type="button"
-                            className="pj-video-poster"
-                            onClick={() => setPlaying(true)}
-                            aria-label={`Play ${video.title}`}
-                        >
-                            {poster && <img src={poster} alt="" />}
-                            <span className="pj-play"><LuPlay /></span>
-                        </button>
-                    )}
-                </div>
-                <figcaption>{video.title}</figcaption>
-            </figure>
-        );
-    }
+    const words = (project.title || "").split(" ");
 
     return (
         <main className="pj" ref={pageRef} style={{ "--pc": project.color }}>
-            {/* <div className="pj-progress" ref={barRef} aria-hidden="true" /> */}
-
             {/* ---------- hero ---------- */}
             <section className="pj-hero">
                 <Link to="/project" className="pj-back">
@@ -171,11 +161,13 @@ function ProjectDetail({ id }) {
             </section>
 
             {/* ---------- cover image ---------- */}
-            <div className="pj-cover-wrap">
-                <div className="pj-cover" data-pj="zoom">
-                    <img src={project.image} alt={project.title} />
+            {project.image && (
+                <div className="pj-cover-wrap">
+                    <div className="pj-cover" data-pj="zoom">
+                        <img src={project.image} alt={project.title} />
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* ---------- quick facts ---------- */}
             <section className="pj-meta">
@@ -196,15 +188,15 @@ function ProjectDetail({ id }) {
                 <div className="pj-overview-text" data-pj="left">
                     <p className="pj-label">Overview</p>
                     <h2>About this project</h2>
-                    {project.overview.map((para) => (
-                        <p key={para}>{para}</p>
+                    {overview.map((para, i) => (
+                        <p key={i}>{para}</p>
                     ))}
                 </div>
 
                 <aside className="pj-side" data-pj="right">
                     <h3>Tech stack</h3>
                     <div className="pj-tools">
-                        {project.tools.map((t) => (
+                        {tools.map((t) => (
                             <span key={t} className="pj-tool">{t}</span>
                         ))}
                     </div>
@@ -226,35 +218,38 @@ function ProjectDetail({ id }) {
                 </aside>
             </section>
 
-            {project.videos && project.videos.length > 0 && (
+            {/* ---------- videos ---------- */}
+            {videos.length > 0 && (
                 <section className="pj-section pj-videos">
                     <h2 data-pj="up">Watch it in action</h2>
                     <p className="pj-sub" data-pj="up" style={{ "--i": 1 }}>
-                        {project.videos.length > 1 ? "Videos from this project." : "A video from this project."}
+                        {videos.length > 1 ? "Videos from this project." : "A video from this project."}
                     </p>
 
-                    <div className={`pj-video-grid ${project.videos.length === 1 ? "single" : ""}`}>
-                        {project.videos.map((v, i) => (
-                            <VideoCard key={v.src} video={v} index={i} />
+                    <div className={`pj-video-grid ${videos.length === 1 ? "single" : ""}`}>
+                        {videos.map((v, i) => (
+                            <VideoCard key={`${v.id || v.src}-${i}`} video={v} index={i} />
                         ))}
                     </div>
                 </section>
             )}
 
             {/* ---------- challenge + solution ---------- */}
-            <section className="pj-duo">
-                <div className="pj-duo-card pj-duo-a" data-pj="tilt" style={{ "--tilt": "-3deg" }}>
-                    <p className="pj-label">The challenge</p>
-                    <p>{project.challenge}</p>
-                </div>
-                <div className="pj-duo-card pj-duo-b" data-pj="tilt" style={{ "--tilt": "3deg", "--i": 1 }}>
-                    <p className="pj-label">The solution</p>
-                    <p>{project.solution}</p>
-                </div>
-            </section>
+            {(project.challenge || project.solution) && (
+                <section className="pj-duo">
+                    <div className="pj-duo-card pj-duo-a" data-pj="tilt" style={{ "--tilt": "-3deg" }}>
+                        <p className="pj-label">The challenge</p>
+                        <p>{project.challenge}</p>
+                    </div>
+                    <div className="pj-duo-card pj-duo-b" data-pj="tilt" style={{ "--tilt": "3deg", "--i": 1 }}>
+                        <p className="pj-label">The solution</p>
+                        <p>{project.solution}</p>
+                    </div>
+                </section>
+            )}
 
             {/* ---------- timeline ---------- */}
-            {project.timeline && project.timeline.length > 0 && (
+            {timeline.length > 0 && (
                 <section className="pj-section pj-timeline">
                     <h2 data-pj="up">Project timeline</h2>
                     <p className="pj-sub" data-pj="up" style={{ "--i": 1 }}>
@@ -274,14 +269,14 @@ function ProjectDetail({ id }) {
                     </div>
 
                     <ol className="pj-tl" data-pj="line">
-                        {project.timeline.map((t, i) => {
+                        {timeline.map((t, i) => {
                             const Icon =
                                 t.state === "done" ? LuCheck : t.state === "current" ? LuLoader : LuClock;
                             const chip =
                                 t.state === "done" ? "Done" : t.state === "current" ? "In progress" : "Coming up";
 
                             return (
-                                <li key={t.title} className={`pj-tl-item pj-tl-${t.state}`} style={{ "--i": i }}>
+                                <li key={`${t.title}-${i}`} className={`pj-tl-item pj-tl-${t.state}`} style={{ "--i": i }}>
                                     <span className="pj-tl-dot"><Icon /></span>
                                     <div className="pj-tl-card">
                                         <span className="pj-tl-date">{t.date}</span>
@@ -297,33 +292,35 @@ function ProjectDetail({ id }) {
             )}
 
             {/* ---------- features ---------- */}
-            <section className="pj-section">
-                <h2 data-pj="up">Key features</h2>
-                <p className="pj-sub" data-pj="up" style={{ "--i": 1 }}>
-                    What makes this project useful.
-                </p>
+            {features.length > 0 && (
+                <section className="pj-section">
+                    <h2 data-pj="up">Key features</h2>
+                    <p className="pj-sub" data-pj="up" style={{ "--i": 1 }}>
+                        What makes this project useful.
+                    </p>
 
-                <div className="pj-features">
-                    {project.features.map((f, i) => {
-                        const Icon = featureIcons[i % featureIcons.length];
-                        return (
-                            <div key={f.title} className="pj-feature" data-pj="up" style={{ "--i": i }}>
-                                <div className="pj-feature-icon"><Icon /></div>
-                                <h3>{f.title}</h3>
-                                <p>{f.text}</p>
-                            </div>
-                        );
-                    })}
-                </div>
-            </section>
+                    <div className="pj-features">
+                        {features.map((f, i) => {
+                            const Icon = featureIcons[i % featureIcons.length];
+                            return (
+                                <div key={`${f.title}-${i}`} className="pj-feature" data-pj="up" style={{ "--i": i }}>
+                                    <div className="pj-feature-icon"><Icon /></div>
+                                    <h3>{f.title}</h3>
+                                    <p>{f.text}</p>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </section>
+            )}
 
-            {/* ---------- gallery (only if you add images) ---------- */}
-            {project.gallery && project.gallery.length > 0 && (
+            {/* ---------- gallery ---------- */}
+            {gallery.length > 0 && (
                 <section className="pj-section">
                     <h2 data-pj="up">Gallery</h2>
                     <div className="pj-gallery">
-                        {project.gallery.map((src, i) => (
-                            <div key={src} className="pj-shot" data-pj="zoom" style={{ "--i": i }}>
+                        {gallery.map((src, i) => (
+                            <div key={`${src}-${i}`} className="pj-shot" data-pj="zoom" style={{ "--i": i }}>
                                 <img src={src} alt={`${project.title} screenshot ${i + 1}`} />
                             </div>
                         ))}

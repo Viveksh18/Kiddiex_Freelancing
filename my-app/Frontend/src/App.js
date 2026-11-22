@@ -1,4 +1,6 @@
 // import logo from '../public/logo2.png';
+import AdminApp from "./admin/AdminApp";
+import "./style/admin.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import './App.css';
 import Navbar from "./component/navbar.js";
@@ -13,6 +15,9 @@ import AboutPage from "./component/about.js";
 import ProjectPage from "./component/projectpage.js";
 
 function App() {
+  if (window.location.pathname.startsWith("/admin")) {
+    return <AdminApp />;
+  }
   return (
     <BrowserRouter>
       <ScrollToTop />
@@ -31,6 +36,7 @@ function App() {
         </Routes>
       </>
       <Footer />
+
     </BrowserRouter>
   );
 }

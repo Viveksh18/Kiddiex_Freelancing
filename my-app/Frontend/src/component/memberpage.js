@@ -1,65 +1,100 @@
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import ScallopPhoto from "../component/ScallopPhoto.js";
 import {
-  LuMail, LuSparkles, LuStar, LuTriangle, LuHeart, LuDiamond, LuZap,
+  LuSparkles, LuStar, LuTriangle, LuHeart, LuDiamond, LuZap,
+  LuBot, LuBrain, LuWorkflow, LuDatabase, LuCode, LuGlobe, LuAtom,
+  LuServer, LuLayers, LuFilm, LuPalette, LuGamepad2, LuCamera,
+  LuClapperboard,
 } from "react-icons/lu";
-import { members } from "../member";
 import "../style/memberpage.css";
 
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const icons = {
-  sparkles: LuSparkles,
-  star: LuStar,
-  triangle: LuTriangle,
-  heart: LuHeart,
-  diamond: LuDiamond,
-  zap: LuZap,
+  sparkles: LuSparkles, star: LuStar, triangle: LuTriangle,
+  heart: LuHeart, diamond: LuDiamond, zap: LuZap,
+  bot: LuBot, brain: LuBrain, workflow: LuWorkflow,
+  database: LuDatabase, code: LuCode, globe: LuGlobe, atom: LuAtom,
+  server: LuServer, layers: LuLayers, film: LuFilm, palette: LuPalette,
+  gamepad: LuGamepad2, gamepad2: LuGamepad2, camera: LuCamera,
+  clapperboard: LuClapperboard,
 };
 
-/* a bumpy left and right edge, in 0-1 units so it scales with the photo */
-function scallopPath(n = 4, a = 0.1) {
-  const step = 1 / n;
-  const c = 1 + a / 3;                       // control point so the bump reaches the edge
-  let d = `M ${a} 0 H ${1 - a}`;
-  for (let i = 0; i < n; i++) {              // right side, going down
-    const y0 = i * step, y1 = (i + 1) * step;
-    d += ` C ${c} ${y0} ${c} ${y1} ${1 - a} ${y1}`;
-  }
-  d += ` H ${a}`;
-  for (let i = n; i > 0; i--) {              // left side, going up
-    const y0 = i * step, y1 = (i - 1) * step;
-    d += ` C ${-a / 3} ${y0} ${-a / 3} ${y1} ${a} ${y1}`;
-  }
-  return d + " Z";
-}
-
-/* rotating "I am available" badge */
-function AvailBadge({ email }) {
-  return (
-    <a href={`mailto:${email}`} className="avail" aria-label="Email me">
-      <svg className="avail-ring" viewBox="0 0 200 200" aria-hidden="true">
-        <defs>
-          <path
-            id="availCircle"
-            d="M100,100 m-72,0 a72,72 0 1,1 144,0 a72,72 0 1,1 -144,0"
-          />
-        </defs>
-        <text>
-          <textPath href="#availCircle" textLength="445" lengthAdjust="spacing">
-            I AM AVAILABLE - FOR FREELANCE -
-          </textPath>
-        </text>
-      </svg>
-      <LuMail className="avail-icon" />
-    </a>
-  );
-}
-
-
+// "Gamepad-2", " Bot ", "gamepad 2" all resolve correctly
+const getIcon = (name) =>
+  icons[(name || "").toLowerCase().replace(/[\s_-]/g, "")] || LuStar;
 
 function MemberPage() {
   const { id } = useParams();
-  const m = members.find((x) => x.id === id);
 
-  if (!m) {
+  const [m, setM] = useState(null);
+  const [others, setOthers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      setLoading(true);
+      setNotFound(false);
+      setError("");
+
+      try {
+        const [memberRes, listRes] = await Promise.all([
+          fetch(`${API_URL}/api/members/${encodeURIComponent(id)}`),
+          fetch(`${API_URL}/api/members`),
+        ]);
+
+        if (memberRes.status === 404) {
+          if (!cancelled) setNotFound(true);
+          return;
+        }
+
+        if (!memberRes.ok) throw new Error("Could not load this member.");
+
+        const memberJson = await memberRes.json();
+        const listJson = listRes.ok ? await listRes.json() : { data: [] };
+
+        if (cancelled) return;
+
+        setM(memberJson.data);
+        setOthers((listJson.data || []).filter((x) => x.id !== id));
+      } catch (err) {
+        if (!cancelled) setError(err.message || "Something went wrong.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    load();
+    window.scrollTo(0, 0);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  if (loading) {
+    return (
+      <section className="member-missing">
+        <h1>Loading...</h1>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="member-missing">
+        <h1>{error}</h1>
+        <Link to="/">Back to home</Link>
+      </section>
+    );
+  }
+
+  if (notFound || !m) {
     return (
       <section className="member-missing">
         <h1>Member not found</h1>
@@ -68,38 +103,36 @@ function MemberPage() {
     );
   }
 
-  const others = members.filter((x) => x.id !== m.id);
+  const bio = m.bio || [];
+  const skills = m.skills || [];
+  const capabilities = m.capabilities || [];
 
   return (
     <main className="member-page">
-      {/* the shape used to cut out the photo */}
-      <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true">
-        <clipPath id="scallop" clipPathUnits="objectBoundingBox">
-          <path d={scallopPath()} />
-        </clipPath>
-      </svg>
-
       {/* ---------- about ---------- */}
       <section className="member-hero">
         <div className="member-photo-wrap">
-          <div className="photo-outline">
-            <div className="member-photo" style={{ background: m.bg }}>
-              <img src={m.photo} alt={m.name} />
-            </div>
-          </div>
-          <AvailBadge email={m.email} />
+          <ScallopPhoto
+            photo={m.photo}
+            name={m.name}
+            bg={m.bg}
+            email={m.email}
+          />
         </div>
 
         <div className="member-text">
-          <p className="member-role">{m.name} &middot; {m.role}</p>
+          <p className="member-role">
+            {m.name} &middot; {m.role}
+          </p>
           <h1>{m.heading}</h1>
-          {m.bio.map((para) => (
-            <p key={para}>{para}</p>
+
+          {bio.map((para, i) => (
+            <p key={i}>{para}</p>
           ))}
 
           <div className="skills">
-            {m.skills.map((s) => (
-              <div key={s.label} className="skill">
+            {skills.map((s, i) => (
+              <div key={`${s.label}-${i}`} className="skill">
                 <div className="skill-top">
                   <span>{s.label}</span>
                   <span>{s.value}%</span>
@@ -114,24 +147,30 @@ function MemberPage() {
       </section>
 
       {/* ---------- capabilities ---------- */}
-      <section className="caps-section">
-        <h2>My capabilities</h2>
-        <p>
-          Every service is crafted around your <strong>goals</strong> and{" "}
-          <strong>audience</strong>, so the result feels made for you.
-        </p>
+      {capabilities.length > 0 && (
+        <section className="caps-section">
+          <h2>My capabilities</h2>
+          <p>
+            Every service is crafted around your <strong>goals</strong> and{" "}
+            <strong>audience</strong>, so the result feels made for you.
+          </p>
 
-        <div className="caps">
-          {m.capabilities.map((c) => {
-            const Icon = icons[c.icon] || LuStar;
-            return (
-              <span key={c.label} className="cap" style={{ "--tc": c.color }}>
-                <Icon /> {c.label}
-              </span>
-            );
-          })}
-        </div>
-      </section>
+          <div className="caps">
+            {capabilities.map((c, i) => {
+              const Icon = getIcon(c.icon);
+              return (
+                <span
+                  key={`${c.label}-${i}`}
+                  className="cap"
+                  style={{ "--tc": c.color }}
+                >
+                  <Icon /> {c.label}
+                </span>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* ---------- other members ---------- */}
       {others.length > 0 && (
