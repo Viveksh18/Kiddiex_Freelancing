@@ -9,7 +9,7 @@ import {
 } from "react-icons/lu";
 import "../style/memberpage.css";
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_URL = "https://kiddiex-freelancing-2.onrender.com";
 
 const icons = {
   sparkles: LuSparkles, star: LuStar, triangle: LuTriangle,

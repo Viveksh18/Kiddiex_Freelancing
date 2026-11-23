@@ -4,7 +4,7 @@ import { LuArrowRight } from "react-icons/lu";
 import ScallopPhoto from "./ScallopPhoto.js";
 import "../style/teampage.css";
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_URL = "https://kiddiex-freelancing-2.onrender.com";
 
 function TeamPage() {
   const [members, setMembers] = useState([]);
