@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { LuMapPin, LuPhone, LuMail, LuPlus } from "react-icons/lu";
 import "../style/contact.css";
 
-const API = "https://kiddiex-freelancing-2.onrender.com";
+const API =  process.env.REACT_APP_API_URL ;
 
 // const API = "http://localhost:5000";
 
@@ -53,38 +53,25 @@ const handleSubmit = async (e) => {
   try {
     const res = await fetch(`${API}/api/contact`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
 
     const contentType = res.headers.get("content-type") || "";
-
     const data = contentType.includes("application/json")
       ? await res.json()
       : null;
 
-    if (!res.ok || !data?.ok) {
-      throw new Error(
-        data?.error || `Request failed (${res.status})`
-      );
+    if (!res.ok || !data?.success) {
+      throw new Error(data?.message || `Request failed (${res.status})`);
     }
 
     setStatus("sent");
     setForm(emptyForm);
-
-    console.log("Contact API response:", data);
-
-    if (!data.welcomeEmailSent) {
-      console.warn("Welcome email was not sent.");
-    }
-
   } catch (error) {
     console.error("Contact submission error:", error);
 
     setStatus("error");
-
     setErrorMsg(
       error.message === "Failed to fetch"
         ? "Unable to connect. Please check your internet connection and try again."
