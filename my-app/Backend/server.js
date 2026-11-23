@@ -68,6 +68,9 @@ app.use((error, req, res, next) => {
 app.use("/api/projects", require("./routes/projectRoutes"));
 app.use("/api/uploads", require("./routes/uploadRoutes"));
 
+app.use(express.json());
+app.use("/api/contact", require("./routes/contactRoutes"));
+
 // Start server after MongoDB connects
 const startServer = async () => {
   await connectDB();
