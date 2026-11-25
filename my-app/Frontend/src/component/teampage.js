@@ -4,17 +4,27 @@ import { LuArrowRight } from "react-icons/lu";
 import ScallopPhoto from "./ScallopPhoto.js";
 import "../style/teampage.css";
 
-const API_URL =   process.env.REACT_APP_API_URL;
+const API_URL = process.env.REACT_APP_API_URL;
 
 function TeamPage() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("API_URL:", API_URL);
     fetch(`${API_URL}/api/members`)
-      .then((r) => r.json())
-      .then((json) => setMembers(json.data || []))
-      .catch(() => setMembers([]))
+      .then((r) => {
+        console.log("status:", r.status);
+        return r.json();
+      })
+      .then((json) => {
+        console.log("response:", json);
+        setMembers(json.data || []);
+      })
+      .catch((err) => {
+        console.error("Fetch failed:", err);
+        setMembers([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
