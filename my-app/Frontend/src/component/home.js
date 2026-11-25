@@ -3,7 +3,6 @@ import { useEffect, useRef } from "react";
 import { LuGlobe, LuNotebookPen, LuMailOpen, LuSparkles, LuStar, LuTriangle, LuHeart, LuDiamond, LuGamepad } from "react-icons/lu";
 import "../style/home.css";
 import { Link } from "react-router-dom";
-// delete: import { members } from "../member";
 
 
 

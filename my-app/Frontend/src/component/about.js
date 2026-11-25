@@ -5,8 +5,10 @@ import {
   LuVideo, LuPenLine, LuPalette, LuCode, LuBot,
   LuMessagesSquare, LuLightbulb, LuRocket,
 } from "react-icons/lu";
-import { members } from "../member";
 import "../style/about.css";
+
+/* backend base URL (set REACT_APP_API_URL in .env and on Netlify) */
+const API_URL = process.env.REACT_APP_API_URL;
 
 /* change this to your startup's name */
 const BRAND = "Kiddiex";
@@ -31,11 +33,12 @@ const steps = [
   { title: "Launch", text: "We polish every detail and deliver results that are ready to go live.", icon: <LuRocket />, bg: "#d9f5ee" },
 ];
 
-/* edit these numbers to match your real ones */
-const stats = [
+/* edit these numbers to match your real ones.
+   the "Team members" number is filled in from the API (team: true) */
+const baseStats = [
   { to: 50, suffix: "+", label: "Projects delivered", bg: "#e3f3ff", tilt: -6 },
   { to: 30, suffix: "+", label: "Happy clients", bg: "#ffe3a3", tilt: 5 },
-  { to: members.length, suffix: "", label: "Team members", bg: "#ffe0f3", tilt: 6 },
+  { to: 0, suffix: "", label: "Team members", bg: "#ffe0f3", tilt: 6, team: true },
   { to: 5, suffix: "", label: "Core services", bg: "#d9f5ee", tilt: -5 },
 ];
 
@@ -82,13 +85,33 @@ function Counter({ to, suffix = "" }) {
 
 function AboutPage() {
   const pageRef = useRef(null);
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  /* scroll reveal: anything with data-reveal gets "in-view" when it appears */
+  /* load team members from the backend */
+  useEffect(() => {
+    fetch(`${API_URL}/api/members`)
+      .then((r) => r.json())
+      .then((json) => setMembers(json.data || []))
+      .catch((err) => {
+        console.error("Members fetch failed:", err);
+        setMembers([]);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  /* fill the team-members stat with the real count */
+  const stats = baseStats.map((s) =>
+    s.team ? { ...s, to: members.length } : s
+  );
+
+  /* scroll reveal: anything with data-reveal gets "in-view" when it appears.
+     re-runs when members load so the team cards are observed too */
   useEffect(() => {
     const page = pageRef.current;
     if (!page) return;
 
-    const els = page.querySelectorAll("[data-reveal]");
+    const els = page.querySelectorAll("[data-reveal]:not(.in-view)");
     if (!els.length) return;
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -110,7 +133,7 @@ function AboutPage() {
 
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
-  }, []);
+  }, [members]);
 
   const ribbon = [...services, ...services];   // doubled so the loop is seamless
 
@@ -237,7 +260,13 @@ function AboutPage() {
       </section>
 
       {/* ---------- team ---------- */}
-      {members.length > 0 && (
+      {loading && (
+        <section className="ab-section">
+          <p className="ab-sub">Loading team…</p>
+        </section>
+      )}
+
+      {!loading && members.length > 0 && (
         <section className="ab-section">
           <h2 data-reveal="up">Meet the people</h2>
           <p className="ab-sub" data-reveal="up" style={{ "--i": 1 }}>
@@ -247,8 +276,8 @@ function AboutPage() {
           <div className="ab-team">
             {members.map((m, i) => (
               <Link
-                key={m.id}
-                to={`/member/${m.id}`}
+                key={m._id}
+                to={`/member/${m._id}`}
                 className="ab-member"
                 data-reveal="zoom"
                 style={{ "--i": i }}
