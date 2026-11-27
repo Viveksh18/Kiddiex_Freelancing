@@ -14,15 +14,15 @@ function TeamPage() {
     console.log("API_URL:", API_URL);
     fetch(`${API_URL}/api/members`)
       .then((r) => {
-        console.log("status:", r.status);
+        // console.log("status:", r.status);
         return r.json();
       })
       .then((json) => {
-        console.log("response:", json);
+        // console.log("response:", json);
         setMembers(json.data || []);
       })
       .catch((err) => {
-        console.error("Fetch failed:", err);
+        // console.error("Fetch failed:", err);
         setMembers([]);
       })
       .finally(() => setLoading(false));
