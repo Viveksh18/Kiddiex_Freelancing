@@ -11,7 +11,7 @@ function TeamPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("API_URL:", API_URL);
+    // console.log("API_URL:", API_URL);
     fetch(`${API_URL}/api/members`)
       .then((r) => {
         // console.log("status:", r.status);
